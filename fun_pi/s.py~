@@ -1,0 +1,98 @@
+import bluetooth
+import RPi.GPIO as GPIO   #calling for header file which helps in using GPIOs of PI
+#import Adafruit_CharLCD 
+from grovepi import *
+from grove_rgb_lcd import *
+# Raspberry Pi pin setup
+#lcd_rs = 18
+#lcd_en = 23
+#lcd_d4 = 24
+#lcd_d5 = 16
+#lcd_d6 = 20
+#lcd_d7 = 21
+#lcd_backlight = 2
+#lcd_rs = 26
+#lcd_en = 19
+#lcd_d4 = 13
+#lcd_d5 = 06
+#lcd_d6 = 05
+#lcd_d7 = 11
+#lcd_backlight = 2
+
+def google_distance(orig_coord,dest_coord):
+    import simplejson, urllib
+    #orig_coord = "Patna Bihar India"
+    #dest_coord = "Jehanabad Bihar India"
+    url = "http://maps.googleapis.com/maps/api/distancematrix/json?origins={0}&destinations={1}&mode=driving&language=en-EN".format(str(orig_coord),str(dest_coord))
+    result= simplejson.load(urllib.urlopen(url))
+    driving_time = result['rows'][0]['elements'][0]['duration']['text']
+    driving_distance = result['rows'][0]['elements'][0]['distance']['text']
+
+    setText( driving_distance + driving_time )
+    #setText( '\n' )
+    #setText ( driving_time )
+
+# Define LCD column and row size for 16x2 LCD.
+#lcd_columns = 16
+#lcd_rows = 2
+
+#lcd = LCD.Adafruit_CharLCD(lcd_rs, lcd_en, lcd_d4, lcd_d5, lcd_d6, lcd_d7, lcd_columns, lcd_rows, lcd_backlight)
+
+server_socket=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
+
+port = 1
+server_socket.bind(("",port))
+server_socket.listen(1)
+
+client_socket,address = server_socket.accept()
+print ("Accepted connection from ",address)
+
+while 1:
+
+    data = client_socket.recv(1024)
+    print ("Received: %s" % data)
+    if(len(data)!= 0):
+        print (len(data))
+        setRGB(0, 128, 68)
+        if (len(data) > 16):  #breaking long strings into 2 parts
+            i = len(data)-16
+            a,b = data[:16], data[16:]  #first string will be of 16 char
+            setText(a)#lcd.message(a)
+            #setRGB(0,128,64)#lcd.message('\n')
+            setText('\n')#lcd.message(b)
+            setText(b)
+            print (i)
+            print (a)
+            print (b)
+        else:
+            setRGB(0, 128, 64)
+            setText(data)#lcd.message(data)
+
+        if (data == "clear"):
+            setText('')#lcd.clear()
+
+        elif (data == "quit"):
+            print ("Quit")
+            break
+        elif (data == "find distance"):
+            origin = "patna bihar india"
+            destination = "jehanabad bihar india"
+            google_distance(origin,destination)
+
+setText('')
+setRGB(0, 0, 0)
+client_socket.close()
+server_socket.close()
+
+def google_distance(orig_cord,dest_coord):
+    import simplejson, urllib
+    #orig_coord = "Patna Bihar India"
+    #dest_coord = "Jehanabad Bihar India"
+    url = "http://maps.googleapis.com/maps/api/distancematrix/json?origins={0}&destinations={1}&mode=driving&language=en-EN".format(str(orig_coord),str(dest_coord))
+    result= simplejson.load(urllib.urlopen(url))
+    driving_time = result['rows'][0]['elements'][0]['duration']['text']
+    driving_distance = result['rows'][0]['elements'][0]['distance']['text']
+
+    setText( driving_distance )
+    setText ( driving_time )
+
